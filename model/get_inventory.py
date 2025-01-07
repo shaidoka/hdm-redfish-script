@@ -72,7 +72,7 @@ class GetInventory(BaseModule):
         resp = client.send_request("get", url)
         if (isinstance(resp, dict) and
                 Constant.SUCCESS_200 == resp.get("status_code", None)):
-            self.networkInterfaceCount = resp.get("Members@odata.count", None)
+            self.networkInterfaceCount = resp["resource"]["Members@odata.count"]
         else:
             err_info = "Failure: failed to get network interface count"
             self.err_list.append(err_info)
@@ -81,19 +81,28 @@ class GetInventory(BaseModule):
         resp = client.send_request("get", url)
         if (isinstance(resp, dict) and
                 Constant.SUCCESS_200 == resp.get("status_code", None)):
-            self.gpuCount = resp.get("Members@odata.count", None)
+            self.gpuCount = resp["resource"]["Members@odata.count"]
         else:
             err_info = "Failure: failed to get GPU count"
             self.err_list.append(err_info)
             raise FailException(*self.err_list)
+        url = "/redfish/v1/Chassis/1/Power"
+        resp = client.send_request("get", url)
+        if (isinstance(resp, dict) and
+                Constant.SUCCESS_200 == resp.get("status_code", None)):
+            self.psuCount = len(resp["resource"]["PowerSupplies"])
+        else:
+            err_info = "Failure: failed to get PSU count"
+            self.err_list.append(err_info)
+            raise FailException(*self.err_list)
+        
 
     def pack_resource(self, resp):
 
         self.hostname = resp.get("HostName", None)
         self.memoryCount = resp.get("MemorySummary", None)["Count"]
-        self.cpuCount = resp.get("CPUCount", None)
+        self.cpuCount = resp["ProcessorSummary"]["Count"]
         self.lDiskCount = resp["StorageControllerSummary"]["LogicalDriveCount"]
         self.pDiskCount = resp["StorageControllerSummary"]["PhysicalDriveCount"]
-        self.storageControllerCount = resp.get("StorageControllerCount", None)
-        self.pcieCount = resp.get("PCIECount", None)
-        self.psuCount = resp.get("PSUCount", None)
+        self.storageControllerCount = resp["StorageControllerSummary"]["StorageControllerCount"]
+        self.pcieCount = len(resp["Links"]["PCIeDevices"])

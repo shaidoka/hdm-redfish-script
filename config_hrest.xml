@@ -199,7 +199,7 @@
 			<property name="Logical Disk Count" reference="LogicalDiskCount"/>
 			<property name="Physical Disk Count" reference="PhysicalDiskCount"/>
 			<property name="Storage Controller Count" reference="StorageControllerCount"/>
-			<property name="PCIe Count reference" reference="PCIECount"/>
+			<property name="PCIe Count" reference="PCIECount"/>
 			<property name="PSU Count" reference="PSUCount"/>
 			<li/>
         </result>
