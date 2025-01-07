@@ -22,9 +22,6 @@ from utils.client import RedfishClient
 from utils.common import Constant
 from utils.model import BaseModule
 from utils.tools import init_args
-from model.get_sensor import GetSensor
-from utils import globalvar
-from utils.predo import GetVersion
 
 class GetInventory(BaseModule):
 
@@ -62,10 +59,10 @@ class GetInventory(BaseModule):
 
         client = RedfishClient(args)
         self.id = client.get_systems_id()
-        url = "/redfish/v1/System/%s" % self.id
+        url = "/redfish/v1/Systems/%s" % self.id
         resp = client.send_request("get", url)
         if (isinstance(resp, dict) and
-                Constant.SUCCESS_0 == resp.get("status_code", None)):
+                Constant.SUCCESS_200 == resp.get("status_code", None)):
             self.pack_resource(resp["resource"])
         else:
             err_info = "Failure: failed to get system inventory"
@@ -74,7 +71,7 @@ class GetInventory(BaseModule):
         url = "/redfish/v1/Systems/%s/NetworkInterfaces" % self.id
         resp = client.send_request("get", url)
         if (isinstance(resp, dict) and
-                Constant.SUCCESS_0 == resp.get("status_code", None)):
+                Constant.SUCCESS_200 == resp.get("status_code", None)):
             self.networkInterfaceCount = resp.get("Members@odata.count", None)
         else:
             err_info = "Failure: failed to get network interface count"
@@ -83,7 +80,7 @@ class GetInventory(BaseModule):
         url = "/redfish/v1/Systems/%s/GPU" % self.id
         resp = client.send_request("get", url)
         if (isinstance(resp, dict) and
-                Constant.SUCCESS_0 == resp.get("status_code", None)):
+                Constant.SUCCESS_200 == resp.get("status_code", None)):
             self.gpuCount = resp.get("Members@odata.count", None)
         else:
             err_info = "Failure: failed to get GPU count"
@@ -95,8 +92,8 @@ class GetInventory(BaseModule):
         self.hostname = resp.get("HostName", None)
         self.memoryCount = resp.get("MemorySummary", None)["Count"]
         self.cpuCount = resp.get("CPUCount", None)
-        self.lDiskCount = resp["StorageControllerSummary"]["LogicalDiskCount"]
-        self.pDiskCount = resp["StorageControllerSummary"]["PhysicalDiskCount"]
+        self.lDiskCount = resp["StorageControllerSummary"]["LogicalDriveCount"]
+        self.pDiskCount = resp["StorageControllerSummary"]["PhysicalDriveCount"]
         self.storageControllerCount = resp.get("StorageControllerCount", None)
         self.pcieCount = resp.get("PCIECount", None)
         self.psuCount = resp.get("PSUCount", None)

@@ -18,7 +18,7 @@
 
 
 from exception.ToolException import FailException
-from utils.client import RedfishClient, RestfulClient
+from utils.client import RedfishClient
 from utils.common import Constant
 from utils.model import BaseModule
 
@@ -49,7 +49,7 @@ class GetHealth(BaseModule):
         url = "/redfish/v1/System/%s" % systems_id
         resp = client.send_request("get", url)
         if (isinstance(resp, dict) and
-                Constant.SUCCESS_0 == resp.get("status_code", None)):
+                Constant.SUCCESS_200 == resp.get("status_code", None)):
             self._pack_resource(resp["resource"])
         else:
             err_info = "Failure: failed to get system health status"

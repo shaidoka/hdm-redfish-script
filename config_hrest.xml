@@ -191,17 +191,17 @@
 	<mapper id="getinventory" help="get System Inventory information." file="model/get_inventory" class="GetInventory" method="run">
         <result>
 			<li/>
-				<property name="HostName" reference="HostName"/>
-				<property name="Memory Count" reference="MemoryCount"/>
-				<property name="Processor Count" reference="CPUCount"/>
-				<property name="NIC Count" reference="NetworkInterfaceCount"/>
-				<property name="GPU Count" reference="GPUCount"/>
-				<property name="Logical Disk Count" reference="LogicalDiskCount"/>
-				<property name="Physical Disk Count" reference="PhysicalDiskCount"/>
-				<property name="Storage Controller Count" reference="StorageControllerCount"/>
-				<property name="PCIe Count reference"="PCIECount"/>
-				<property name="PSU Count" reference="PSUCount"/>
-            <li/>
+			<property name="HostName" reference="HostName"/>
+			<property name="Memory Count" reference="MemoryCount"/>
+			<property name="Processor Count" reference="CPUCount"/>
+			<property name="NIC Count" reference="NetworkInterfaceCount"/>
+			<property name="GPU Count" reference="GPUCount"/>
+			<property name="Logical Disk Count" reference="LogicalDiskCount"/>
+			<property name="Physical Disk Count" reference="PhysicalDiskCount"/>
+			<property name="Storage Controller Count" reference="StorageControllerCount"/>
+			<property name="PCIe Count reference" reference="PCIECount"/>
+			<property name="PSU Count" reference="PSUCount"/>
+			<li/>
         </result>
 	</mapper>
 	<mapper id="getelog" help="get event log." file="model/get_event_log" class="GetEventLog" method="run">

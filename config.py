@@ -37,7 +37,7 @@ class XmlConfig(object):
         self._view_method = None
         self._format = None
         self._type = None
-        self.path = "./config_hrest.xml"
+        self.path = "/config_hrest.xml"
 
     @property
     def args(self):
