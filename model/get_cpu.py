@@ -195,48 +195,55 @@ class GetCpu(BaseModule):
             "TotalPowerWatts": self.total_power_watts,
             "CPUS": self.cpus
         }
-
+    
     @GetVersion()
     def run(self, args):
-
-        init_args(args, self.args_lst)
-        restful = RestfulClient(args)
-        is_adapt_b01 = globalvar.IS_ADAPT_B01
-        if is_adapt_b01:
-            self.cpus = self._get_b01_processor(restful, args)
-        else:
-            redfish = RedfishClient(args)
-            redfish_cpu = self._get_processor(redfish, args)
-        try:
-
-            self._get_health_info(restful)
-            restful_cpu = self._get_hardware_cpu(restful)
-            if is_adapt_b01 is not True:
-
-                if not restful_cpu:
-                    return self.suc_list
-                self.cpus = self._pack_cpu_resource(restful_cpu, redfish_cpu)
-        finally:
-            if restful.cookie:
-                restful.delete_session()
+        redfish = RedfishClient(args)
+        redfish_cpu = self._get_processor(redfish, args)
+        self.cpus = redfish_cpu
         return self.suc_list
 
-    def _get_health_info(self, client):
+    # @GetVersion():q:qqqqq:::::::asfasidnbsjolgfndsjgzzzzzFSAFAS
+    # def run(self, args):
 
-        status_dict = {
-            "0": "OK",
-            "1": "Caution",
-            "2": "Warning",
-            "3": "Critical"
-        }
-        url = "/api/health_info"
-        resp = client.send_request("GET", url)
-        if isinstance(resp, dict) and Constant.SUCCESS_0 == resp.get("cc"):
-            psu_health = status_dict.get(str(resp.get("processor")), None)
-            self.overall_health = psu_health
-        else:
-            self.err_list.append("Failure: failed to get cpu health status")
-            raise FailException(*self.err_list)
+    #     init_args(args, self.args_lst)
+    #     restful = RestfulClient(args)
+    #     is_adapt_b01 = globalvar.IS_ADAPT_B01
+    #     if is_adapt_b01:
+    #         self.cpus = self._get_b01_processor(restful, args)
+    #     else:
+    #         redfish = RedfishClient(args)
+    #         redfish_cpu = self._get_processor(redfish, args)
+    #     try:
+
+    #         self._get_health_info(restful)
+    #         restful_cpu = self._get_hardware_cpu(restful)
+    #         if is_adapt_b01 is not True:
+
+    #             if not restful_cpu:
+    #                 return self.suc_list
+    #             self.cpus = self._pack_cpu_resource(restful_cpu, redfish_cpu)
+    #     finally:
+    #         if restful.cookie:
+    #             restful.delete_session()
+    #     return self.suc_list
+
+    # def _get_health_info(self, client):
+
+    #     status_dict = {
+    #         "0": "OK",
+    #         "1": "Caution",
+    #         "2": "Warning",
+    #         "3": "Critical"
+    #     }
+    #     url = "/redfish/v1/Systems/1"
+    #     resp = client.send_request("GET", url)
+    #     if isinstance(resp, dict):
+    #         psu_health = status_dict.get(str(resp.get("processor")), None)
+    #         self.overall_health = psu_health
+    #     else:
+    #         self.err_list.append("Failure: failed to get cpu health status")
+    #         raise FailException(*self.err_list)
 
     def _get_processor(self, client, args):
 
@@ -303,39 +310,39 @@ class GetCpu(BaseModule):
             raise FailException(*self.err_list)
         return cpu_list
 
-    def _get_b01_processor(self, client, args):
+    # def _get_b01_processor(self, client, args):
 
-        cpu_list = list()
-        url = "/api/system/processor"
-        resp = client.send_request("GET", url)
-        i = 1
-        if isinstance(resp, list):
-            for info in resp:
-                if isinstance(info, dict):
-                    cpu = CPU()
-                    cpu.name = "CPU%s" % (str(i))
-                    cpu.temperature = self._get_temp(client, cpu.name)
-                    cpu.pack_restful_resource(info)
-                    cpu_list.append(cpu)
-                    i = i + 1
-                else:
-                    self.err_list.append("Failure: failed to get cpu "
-                                         "information")
-                    raise FailException(*self.err_list)
-            try:
-                cpu_list = sorted(cpu_list, key=lambda s: s.id)
-            except (KeyError, ValueError, Exception) as err:
-                self.err_list.append(str(err))
-                raise FailException(*self.err_list)
-        else:
-            self.err_list.append("Failure: failed to get system CPUs "
-                                 "information")
-            raise FailException(*self.err_list)
-        if not cpu_list:
-            err_info = "Failure: resource was not found"
-            self.err_list.append(err_info)
-            raise FailException(*self.err_list)
-        return cpu_list
+    #     cpu_list = list()
+    #     url = "/api/system/processor"
+    #     resp = client.send_request("GET", url)
+    #     i = 1
+    #     if isinstance(resp, list):
+    #         for info in resp:
+    #             if isinstance(info, dict):
+    #                 cpu = CPU()
+    #                 cpu.name = "CPU%s" % (str(i))
+    #                 cpu.temperature = self._get_temp(client, cpu.name)
+    #                 cpu.pack_restful_resource(info)
+    #                 cpu_list.append(cpu)
+    #                 i = i + 1
+    #             else:
+    #                 self.err_list.append("Failure: failed to get cpu "
+    #                                      "information")
+    #                 raise FailException(*self.err_list)
+    #         try:
+    #             cpu_list = sorted(cpu_list, key=lambda s: s.id)
+    #         except (KeyError, ValueError, Exception) as err:
+    #             self.err_list.append(str(err))
+    #             raise FailException(*self.err_list)
+    #     else:
+    #         self.err_list.append("Failure: failed to get system CPUs "
+    #                              "information")
+    #         raise FailException(*self.err_list)
+    #     if not cpu_list:
+    #         err_info = "Failure: resource was not found"
+    #         self.err_list.append(err_info)
+    #         raise FailException(*self.err_list)
+    #     return cpu_list
 
     def _get_temp(self, client, cpu_name):
         sensors = GetSensor.get_hardware_sensor(self, client)
@@ -347,21 +354,22 @@ class GetCpu(BaseModule):
     def _get_hardware_cpu(self, client):
 
         cpu_list = []
-        url = "/api/system/processor"
+        url = "/redfish/v1/Systems/1/Processors"
         resp = client.send_request("GET", url)
-        if isinstance(resp, list):
-            if not resp:
+        if isinstance(resp, dict):
+            if not resp.get("Members"):
+                print(resp)
                 self.suc_list.append("Failure: CPU resource is empty")
             else:
-
+                members = resp.get("Members")
                 if not MAX_NUM:
-                    self.maximum = len(resp)
-                for cpu in resp:
-                    if cpu.get("processor_index") == 0:
+                    self.maximum = len(members)
+                for cpu in members:
+                    if cpu.get("@odata.id").split("/")[-1] == 0:
                         global CPU_ID_IS_START_FROM_ONE
                         CPU_ID_IS_START_FROM_ONE = False
                         break
-                cpu_list.extend(resp)
+                cpu_list.extend(members)
         else:
             self.err_list.append("Failure: failed to get CPU collection")
             raise FailException(*self.err_list)

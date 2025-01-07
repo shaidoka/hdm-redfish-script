@@ -18,7 +18,7 @@
 
 
 from exception.ToolException import FailException
-from utils.client import RestfulClient
+from utils.client import RedfishClient, RestfulClient
 from utils.common import Constant
 from utils.model import BaseModule
 
@@ -27,24 +27,15 @@ class GetHealth(BaseModule):
 
     def __init__(self):
         super().__init__()
-        self.health = None
-        self.processor = None
-        self.memory = None
-        self.disk = None
-        self.nic = None
-        self.power = None
-        self.fans = None
-
-        self.temperature = None
-        self.volatge = None
-        self.current = None
-
+        self.overall = None
         self.board = None
-        self.nvme = None
+        self.fans = None
+        self.memory = None
         self.pcie = None
-        self.raid = None
-
-        self.second_psu_fault = None
+        self.power = None
+        self.processor = None
+        self.storage = None
+        self.temperature = None
 
     @property
     def dict(self):
@@ -53,56 +44,33 @@ class GetHealth(BaseModule):
 
     def run(self, args):
 
-        client = RestfulClient(args)
-        try:
-            url = "/api/health_info"
-            resp = client.send_request("GET", url)
-            if (isinstance(resp, dict) and
-                    Constant.SUCCESS_0 == resp.get("cc", None)):
-                self._pack_resource(resp)
-            else:
-                err_info = "Failure: failed to get system health status"
-                self.err_list.append(err_info)
-                raise FailException(*self.err_list)
-        finally:
-            if client.cookie:
-                client.delete_session()
+        client = RedfishClient(args)
+        systems_id = client.get_systems_id()
+        url = "/redfish/v1/System/%s" % systems_id
+        resp = client.send_request("get", url)
+        if (isinstance(resp, dict) and
+                Constant.SUCCESS_0 == resp.get("status_code", None)):
+            self._pack_resource(resp["resource"])
+        else:
+            err_info = "Failure: failed to get system health status"
+            self.err_list.append(err_info)
+            raise FailException(*self.err_list)
 
         return self.suc_list
 
     def _pack_resource(self, resp):
 
-        status_dict = {
-            "0": "OK",
-            "1": "Caution",
-            "2": "Warning",
-            "3": "Critical"
-        }
-
-        nic_status_dict = {
-            "0": "OK",
-            "1": "Absent",
-            "2": "Critical",
-            "3": "Present"
-        }
-
-        self.health = status_dict.get(str(resp.get("health", None)), None)
-        self.processor = status_dict.get(
-            str(resp.get("processor", None)), None)
-        self.memory = status_dict.get(str(resp.get("memory", None)), None)
-        self.disk = status_dict.get(str(resp.get("disk", None)), None)
-        self.nic = nic_status_dict.get(str(resp.get("nic", None)), None)
-        self.power = status_dict.get(str(resp.get("power", None)), None)
-        self.fans = status_dict.get(str(resp.get("fans", None)), None)
-
-        self.temperature = status_dict.get(str(resp.get("temperature", None)),
-                                           None)
-        self.voltage = status_dict.get(str(resp.get("volatge", None)), None)
-        self.current = status_dict.get(str(resp.get("current", None)), None)
-
-        self.board = status_dict.get(str(resp.get("board", None)), None)
-        self.nvme = resp.get("nvme", None)
-        self.pcie = status_dict.get(str(resp.get("pcie", None)), None)
-        self.raid = status_dict.get(str(resp.get("raid", None)), None)
-        self.second_psu_fault = status_dict.get(
-            str(resp.get("second_psu_fault", None)), None)
+        if (isinstance(resp.get("Healthstate", None), dict)):
+            self.overall = resp["Healthstate"].get("OverallHealth", None)
+            self.board = resp["Healthstate"].get("board", None)
+            self.fans = resp["Healthstate"].get("fans", None)
+            self.memory = resp["Healthstate"].get("memory", None)
+            self.pcie = resp["Healthstate"].get("pcie", None)
+            self.power = resp["Healthstate"].get("power", None)
+            self.processor = resp["Healthstate"].get("processor", None)
+            self.storage = resp["Healthstate"].get("storage", None)
+            self.temperature = resp["Healthstate"].get("temperature", None)
+        else:
+            err_info = "Failure: failed to pack health status"
+            self.err_list.append(err_info)
+            raise FailException(*self.err_list)

@@ -22,6 +22,7 @@ from utils.client import RestfulClient
 from utils.client import RedfishClient
 from utils.common import Constant
 from utils.model import BaseModule
+from packaging import version as pkg_version
 
 
 class Firmware:
@@ -68,7 +69,7 @@ class GetFirmware(BaseModule):
 
             version = self.get_hdm_firmware(client)
 
-            if version < "1.11.00":
+            if pkg_version.parse(version) < pkg_version.parse("1.11.00"):
                 self.get_all_firmware(client, firmware_list)
             else:
                 client1 = RedfishClient(args)

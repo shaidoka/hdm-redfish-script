@@ -29,8 +29,7 @@ from urllib.parse import urlencode
 
 ssl._create_default_https_context = ssl._create_unverified_context
 urllib3.disable_warnings()
-HTTP = urllib3.PoolManager()
-
+HTTP = urllib3.PoolManager(cert_reqs='CERT_NONE')
 
 class Client(object):
 
@@ -129,7 +128,7 @@ class RestfulClient(Client):
     def request(self, method, url, body=None):
 
         headers = {
-            "X-CSRFTOKEN": self.token,
+            "X-Auth-Token": self.token,
             "Cookie": self.cookie
         }
 
@@ -213,7 +212,7 @@ class RestfulClient(Client):
             "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) "
             "Chrome/76.0.3809.132 Safari/537.36",
-            "X-CSRFTOKEN": self.token,
+            "X-Auth-Token": self.token,
             "Cookie": "custom_id=2; product_board_id=g3; "
             "productID_num=16978692; lang=auto; safe_switch=0; "
             "oem_flag=0; buid_time=2019; extended_privilege=259; "
@@ -268,7 +267,7 @@ class RestfulClient(Client):
     def http_get(self, url):
 
         headers = {
-            "X-CSRFTOKEN": self.token,
+            "X-Auth-Token": self.token,
             "Cookie": self.cookie
         }
         if self.port is not None:
@@ -533,7 +532,6 @@ class RedfishClient(Client):
         if (isinstance(ret, dict) and ret.get("status_code", None) ==
                 Constant.SUCCESS_200):
             try:
-
                 index = (ret["resource"]["Members"][0]["@odata.id"].split(
                     r"/")[4])
             except (IndexError, KeyError, Exception):

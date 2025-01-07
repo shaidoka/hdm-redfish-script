@@ -82,13 +82,12 @@ class GetProduct(BaseModule):
 
     @GetVersion()
     def run(self, args):
-
+        """
         client = RestfulClient(args)
         try:
 
             self._get_fru(client)
 
-            self._get_capping(client)
         finally:
             if client.cookie:
                 client.delete_session()
@@ -97,114 +96,108 @@ class GetProduct(BaseModule):
             try:
                 client = RestfulClient(args)
 
-                self._get_uuid(client)
-
                 self._get_powerstate(client)
-
-                self._get_healthinfo(client)
 
                 self.slot_id = 1
             finally:
                 if client.cookie:
                     client.delete_session()
         else:
-            client = RedfishClient(args)
-            systems_id = client.get_systems_id()
-            self.slot_id = systems_id
-            url = "/redfish/v1/Systems/%s" % systems_id
-            resp = client.send_request("GET", url)
-            if (isinstance(resp, dict) and
-                    resp.get("status_code", None) in Constant.SUC_CODE):
-                self._pack_system_info(resp["resource"])
-            else:
-                self.err_list.append("Failure: failed to get product"
-                                     "information")
-                raise FailException(*self.err_list)
+        """
+        client = RedfishClient(args)
+        systems_id = client.get_systems_id()
+        self.slot_id = systems_id
+#            self._get_capping(client)
+#            self._get_uuid(client)
+        url = "/redfish/v1/Systems/%s" % systems_id
+        resp = client.send_request("GET", url)
+        if (isinstance(resp, dict) and
+                resp.get("status_code", None) in Constant.SUC_CODE):
+            self._pack_system_info(resp["resource"])
+        else:
+            self.err_list.append("Failure: failed to get product"
+                                    "information")
+            raise FailException(*self.err_list)
         return self.suc_list
 
-    def _get_fru(self, client):
+    # def _get_fru(self, client):
 
-        url = "/api/fru"
-        resp = client.send_request("GET", url)
-        if resp is None:
-            err_info = "Failure: failed to get mainboard serial number"
-            self.err_list.append(err_info)
-            raise FailException(*self.err_list)
-        else:
-            try:
-                self.board_serial_number = resp[0]["board"]["serial_number"]
+    #     url = "/api/fru"
+    #     resp = client.send_request("GET", url)
+    #     if resp is None:
+    #         err_info = "Failure: failed to get mainboard serial number"
+    #         self.err_list.append(err_info)
+    #         raise FailException(*self.err_list)
+    #     else:
+    #         try:
+    #             self.board_serial_number = resp[0]["board"]["serial_number"]
 
-                self.manufacturer = resp[0]["product"]["manufacturer"]
-                self.model = resp[0]["product"]["product_name"]
-                self.serial_number = resp[0]["product"]["serial_number"]
+    #             self.manufacturer = resp[0]["product"]["manufacturer"]
+    #             self.model = resp[0]["product"]["product_name"]
+    #             self.serial_number = resp[0]["product"]["serial_number"]
 
-            except (IndexError, KeyError, Exception):
-                self.board_serial_number = None
+    #         except (IndexError, KeyError, Exception):
+    #             self.board_serial_number = None
 
-    def _get_capping(self, restful):
+    # def _get_capping(self, client):
 
-        url = "/api/power/capping"
-        resp = restful.send_request("GET", url)
-        if (isinstance(resp, dict) and
-                Constant.SUCCESS_0 == resp.get("cc", None)):
-            self.power_overall = resp.get("power_overall", None)
-        else:
-            err_info = ("Failure: failed to get the total "
-                        "power input of the system power")
-            self.err_list.append(err_info)
-            raise FailException(*self.err_list)
+    #     url = "/redfish/v1/Chassis/1/Power"
+    #     resp = client.send_request("GET", url)
+    #     if (isinstance(resp, dict)):
+    #         powerControl = resp.get("PowerControl", None)
+    #         self.power_overall = powerControl[0]["PowerLimit"]["PowerConsumedWatts"]
+    #     else:
+    #         err_info = ("Failure: failed to get the total "
+    #                     "power input of the system power")
+    #         self.err_list.append(err_info)
+    #         raise FailException(*self.err_list)
 
-    def _get_uuid(self, restful):
+    # def _get_uuid(self, client):
 
-        url = "/api/uuid"
-        resp = restful.send_request("GET", url)
-        if (isinstance(resp, dict) and
-                Constant.SUCCESS_0 == resp.get("cc", None)):
-            self.uuid = resp.get("uuid", None)
-        else:
-            err_info = ("Failure: failed to get the total "
-                        "power input of the system power")
-            self.err_list.append(err_info)
-            raise FailException(*self.err_list)
+    #     url = "/redfish/v1"
+    #     resp = client.send_request("GET", url)
+    #     if (isinstance(resp, dict)):
+    #         self.uuid = resp.get("UUID", None)
+    #     else:
+    #         err_info = ("Failure: failed to get uuid of the system")
+    #         self.err_list.append(err_info)
+    #         raise FailException(*self.err_list)
 
-    def _get_powerstate(self, restful):
+    # def _get_powerstate(self, client):
 
-        status_dict = {
-            0: "Off",
-            1: "On"
-        }
-        url = "/api/chassis-status"
-        resp = restful.send_request("GET", url)
-        if (isinstance(resp, dict) and
-                Constant.SUCCESS_0 == resp.get("cc", None)):
-            self.power_state = status_dict.get(resp.get("power_status"), None)
-        else:
-            err_info = ("Failure: failed to get the total "
-                        "power input of the system power")
-            self.err_list.append(err_info)
-            raise FailException(*self.err_list)
+    #     status_dict = {
+    #         0: "Off",
+    #         1: "On"
+    #     }
+    #     url = "/redfish/v1/Chassis/1/Power"
+    #     resp = client.send_request("GET", url)
+    #     if (isinstance(resp, dict)):
+    #         self.power_state = resp.get("AllPowerStatus", None)["Oem"]["Public"]["HostPowerStatus"]
+    #     else:
+    #         err_info = ("Failure: failed to get power status")
+    #         self.err_list.append(err_info)
+    #         raise FailException(*self.err_list)
 
-    def _get_healthinfo(self, restful):
+    # def _get_healthinfo(self, client):
 
-        status_dict = {
-            0: "OK",
-            1: "Caution",
-            2: "Warning",
-            3: "Critical"
-        }
-        url = "/api/health_info"
-        resp = restful.send_request("GET", url)
-        if (isinstance(resp, dict) and
-                Constant.SUCCESS_0 == resp.get("cc", None)):
-            self.overall_health = status_dict.get(resp.get("health"), None)
-        else:
-            err_info = ("Failure: failed to get the total "
-                        "power input of the system power")
-            self.err_list.append(err_info)
-            raise FailException(*self.err_list)
+    #     status_dict = {
+    #         0: "OK",
+    #         1: "Caution",
+    #         2: "Warning",
+    #         3: "Critical"
+    #     }
+    #     url = "/redfish/v1/Chassis/1"
+    #     resp = client.send_request("GET", url)
+    #     if (isinstance(resp, dict) and
+    #             Constant.SUCCESS_0 == resp.get("cc", None)):
+    #         self.overall_health = status_dict.get(resp.get("health"), None)
+    #     else:
+    #         err_info = ("Failure: failed to get the total "
+    #                     "power input of the system power")
+    #         self.err_list.append(err_info)
+    #         raise FailException(*self.err_list)
 
     def _pack_system_info(self, resp):
-
         self.model = resp.get("Model", None)
         self.manufacturer = resp.get("Manufacturer", None)
 
@@ -228,6 +221,4 @@ class GetProduct(BaseModule):
         self.bios_version = resp.get("BiosVersion", None)
         if isinstance(resp.get('Status', None), dict):
             self.status["Health"] = resp['Status'].get('Health', None)
-            self.status["HealthRollup"] = resp['Status'].get('HealthRollup',
-                                                             None)
             self.status["State"] = resp['Status'].get('State', None)
