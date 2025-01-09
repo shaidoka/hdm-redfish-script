@@ -61,25 +61,33 @@ class GetFirmware(BaseModule):
             "Firmware": self.firmware
         }
 
+    # def run(self, args):
+
+    #     firmware_list = []
+    #     client = RestfulClient(args)
+    #     try:
+
+    #         version = self.get_hdm_firmware(client)
+
+    #         if pkg_version.parse(version) < pkg_version.parse("1.11.00"):
+    #             self.get_all_firmware(client, firmware_list)
+    #         else:
+    #             client1 = RedfishClient(args)
+    #             self.get_redfish_firmware(client1, firmware_list)
+    #             self.get_restful_firmware(client, firmware_list)
+    #     finally:
+    #         if client.cookie:
+    #             client.delete_session()
+    #     self.firmware = deal_firmware_info(firmware_list)
+    #     return self.suc_list
+
     def run(self, args):
-
+        
         firmware_list = []
-        client = RestfulClient(args)
-        try:
-
-            version = self.get_hdm_firmware(client)
-
-            if pkg_version.parse(version) < pkg_version.parse("1.11.00"):
-                self.get_all_firmware(client, firmware_list)
-            else:
-                client1 = RedfishClient(args)
-                self.get_redfish_firmware(client1, firmware_list)
-                self.get_restful_firmware(client, firmware_list)
-        finally:
-            if client.cookie:
-                client.delete_session()
+        client = RedfishClient(args)
+        self.get_redfish_firmware(client, firmware_list)
         self.firmware = deal_firmware_info(firmware_list)
-        return self.suc_list
+        
 
     def get_restful_firmware(self, client, lst):
 
@@ -113,7 +121,7 @@ class GetFirmware(BaseModule):
         else:
             err_info = "Failure: failed to get firmware collection"
             self.err_list.append(err_info)
-        if self.err_list:
+        if self.err_list:   
             raise FailException(*self.err_list)
 
     def get_hdm_firmware(self, client):
@@ -185,7 +193,7 @@ def deal_redfish_firmware(resp):
     info = resp["resource"]
     tmp_name = info.get("Name", None)
     if tmp_name == "HDM":
-        fw_name = "ActiveBMC"
+        fw_name = "HDM"
     elif tmp_name == "CPLD":
         fw_name = "MainBoard_CPLD"
     elif tmp_name == "BIOS":
@@ -195,7 +203,7 @@ def deal_redfish_firmware(resp):
     detail["name"] = fw_name
     tmp_type = info.get("SoftwareId")
     if tmp_type == "HDM":
-        fw_type = "BMC"
+        fw_type = "HDM"
     elif tmp_type == "CPLD":
         fw_type = "CPLD"
     elif tmp_type == "BIOS":
