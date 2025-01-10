@@ -555,11 +555,12 @@
 	<mapper id="getpower" help="get power usage" file="model/get_power" class="GetPower" method="run">
 		<result>
 			<li/>
-			<propperty name="CPU Power Usage" reference="CPU Power Usage"/>
-			<propperty name="Memory Power Usage" reference="Memory Power Usage"/>
-			<propperty name="Storage Power Usage" reference="Storage Power Usage"/>
+			<property name="CPU Power Usage" reference="CPU Power Usage"/>
+			<property name="Memory Power Usage" reference="Memory Power Usage"/>
+			<property name="Storage Power Usage" reference="Storage Power Usage"/>
 			<property name="Fan Power Usage" reference="Fan Power Usage"/>
 			<property name="GPU Power Usage" reference="GPU Power Usage"/>
+			<property name="Other Components Power Usage" reference="Other components Power Usage"/>
 			<property name="Overall Power Usage" reference="Overall Power Usage"/>
 			<li/>
         </result>
