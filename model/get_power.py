@@ -29,10 +29,10 @@ class GetPower(BaseModule):
 
         self.cpuPower = None
         self.memoryPower = None
-        self.pciePower = None
         self.fanPower = None
         self.storagePower = None
-        self.gpuPower = []
+        self.gpuPower = None
+        self.otherPower = None
         self.overallPower = None
 
     @property
@@ -44,6 +44,7 @@ class GetPower(BaseModule):
             "Fan Power Usage": self.fanPower,
             "Storage Power Usage": self.storagePower,
             "GPU Power Usage": self.gpuPower,
+            "Other components Power Usage": self.otherPower,
             "Overall Power Usage": self.overallPower
         }
 
@@ -60,17 +61,6 @@ class GetPower(BaseModule):
             err_info = "Failure: failed to get power information"
             self.err_list.append(err_info)
             raise FailException(*self.err_list)
-        url = f"/redfish/v1/Systems/{system_id}/GPU"
-        resp = client.send_request("get", url)
-        if (isinstance(resp, dict) and
-                resp.get("status_code", None) == 200):
-            for gpu in resp["resource"]["GPU"]:
-                self.gpuPower.append(gpu["PowerConsumedWatts"])
-        else:
-            err_info = "Failure: failed to get GPU power information"
-            self.err_list.append(err_info)
-            raise FailException(*self.err_list)
-        self.overallPower = self.cpuPower + self.memoryPower + self.fanPower + self.storagePower + sum(self.gpuPower)
 
     def package_results(self, resp):
 
@@ -78,3 +68,6 @@ class GetPower(BaseModule):
         self.memoryPower = resp["PowerControl"][0]["Oem"]["Public"]["CurrentMemoryPowerWatts"]
         self.fanPower = resp["PowerControl"][0]["Oem"]["Public"]["CurrentFanPowerWatts"]
         self.storagePower = resp["PowerControl"][0]["Oem"]["Public"]["CurrentDiskPowerWatts"]
+        self.gpuPower = resp["PowerControl"][0]["Oem"]["Public"]["CurrentGPUPowerWatts"]
+        self.overallPower = resp["PowerControl"][0]["Oem"]["Public"]["CurrentBoardPowerWatts"]
+        self.otherPower = resp["PowerControl"][0]["Oem"]["Public"]["OtherComponentsPowerWatts"]
