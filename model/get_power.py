@@ -19,79 +19,62 @@
 
 import re
 from exception.ToolException import FailException
-from utils.client import RestfulClient
+from utils.client import RestfulClient,RedfishClient
 from utils.model import BaseModule
-
-
-class Power:
-
-    def __init__(self):
-
-        self.name = None
-        self.sensor_number = None
-        self.reading = None
-
-    @property
-    def dict(self):
-
-        return {
-            "Name": self.name,
-            "SensorNumber": self.sensor_number,
-            "ReadingWatt": self.reading
-        }
 
 
 class GetPower(BaseModule):
 
     def __init__(self):
 
-        super().__init__()
-        self.power = []
+        self.cpuPower = None
+        self.memoryPower = None
+        self.pciePower = None
+        self.fanPower = None
+        self.storagePower = None
+        self.gpuPower = []
+        self.overallPower = None
 
     @property
     def dict(self):
 
         return {
-            "Power": self.power
+            "CPU Power Usage": self.cpuPower,
+            "Memory Power Usage": self.memoryPower,
+            "Fan Power Usage": self.fanPower,
+            "Storage Power Usage": self.storagePower,
+            "GPU Power Usage": self.gpuPower,
+            "Overall Power Usage": self.overallPower
         }
 
     def run(self, args):
 
-        client = RestfulClient(args)
-        url = "/api/sensors"
-        try:
-            resp = client.send_request("GET", url)
-            psu_sensor = (self.package_results(list(filter(is_power_sensor,
-                                                           resp))))
-            self.power = psu_sensor
-        finally:
-            if client.cookie:
-                client.delete_session()
-        return self.suc_list
+        client = RedfishClient(args)
+        system_id = client.get_systems_id()
+        url = f"/redfish/v1/Chassis/{system_id}/Power"
+        resp = client.send_request("get", url)
+        if (isinstance(resp, dict) and
+                resp.get("status_code", None) == 200):
+            self.package_results(resp["resource"])
+        else:
+            err_info = "Failure: failed to get power information"
+            self.err_list.append(err_info)
+            raise FailException(*self.err_list)
+        url = f"/redfish/v1/Systems/{system_id}/GPU"
+        resp = client.send_request("get", url)
+        if (isinstance(resp, dict) and
+                resp.get("status_code", None) == 200):
+            for gpu in resp["resource"]["GPU"]:
+                self.gpuPower.append(gpu["PowerConsumedWatts"])
+        else:
+            err_info = "Failure: failed to get GPU power information"
+            self.err_list.append(err_info)
+            raise FailException(*self.err_list)
+        self.overallPower = self.cpuPower + self.memoryPower + self.fanPower + self.storagePower + sum(self.gpuPower)
 
     def package_results(self, resp):
 
-        sensors = resp
-        try:
-            sensors = sorted(sensors, key=lambda s: s["sensor_number"])
-        except KeyError as err:
-            self.err_list.append(str(err))
-            raise FailException(*self.err_list)
-        sensor_list = list()
-        for sensor in sensors:
-            detail = dict()
-            detail["name"] = sensor.get("name", None)
-            detail["sensor_number"] = sensor.get("sensor_number", None)
-            detail["reading"] = sensor.get("reading", None)
-            power = Power()
-            power.__dict__.update(detail)
-            sensor_list.append(power)
-        return sensor_list
-
-
-def is_power_sensor(sensor_dict):
-
-    if (sensor_dict.get("name") is not None and
-            re.match(r"PSU\d*_PIN$", sensor_dict["name"])):
-        return True
-    return False
+        self.cpuPower = resp["PowerControl"][0]["Oem"]["Public"]["CurrentCPUPowerWatts"]
+        self.memoryPower = resp["PowerControl"][0]["Oem"]["Public"]["CurrentMemoryPowerWatts"]
+        self.fanPower = resp["PowerControl"][0]["Oem"]["Public"]["CurrentFanPowerWatts"]
+        self.storagePower = resp["PowerControl"][0]["Oem"]["Public"]["CurrentDiskPowerWatts"]
