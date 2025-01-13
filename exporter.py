@@ -33,8 +33,8 @@ def probe():
     probe_status._metric_init()
 
     try:
-        ip = target.split('/')[0]
-        port = target.split('/')[1]
+        ip = target.split(':')[0]
+        port = target.split(':')[1]
         client = RedfishClient({'host': ip, 'port': port, 'user': ipmi_info[ip]['pm_user'], 'password': ipmi_info[ip]['pm_password']})
         for mod in module.split(','):
             if mod == 'inventory':
