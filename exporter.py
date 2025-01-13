@@ -38,9 +38,9 @@ def probe():
         user = ipmi_info[ip]['pm_user']
         password = ipmi_info[ip]['pm_password']
         args = {
-            "ip": ip,
+            "host": ip,
             "port": port,
-            "user": user,
+            "username": user,
             "password": password
         }
         for mod in module.split(','):
