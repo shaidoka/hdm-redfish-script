@@ -1,7 +1,6 @@
 from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, generate_latest, start_http_server, Summary, Gauge, Enum
 from flask import Flask, request, Response
 import time
-from utils.client import RedfishClient, RestfulClient
 from exception.ToolException import FailException
 import yaml
 import model.get_power
@@ -16,6 +15,13 @@ temperature_gauge = Gauge('temperature_celsius', 'Temperature in Celsius', ['tar
 inventory_number_gauge = Gauge('inventory_number', 'Number of inventory items', ['target', 'type'], registry=registry)
 
 app = Flask(__name__)
+
+class Args:
+    def __init__(self, host, port, username, password):
+        self.host = host
+        self.port = port
+        self.username = username
+        self.password = password
 
 with open('/etc/kolla/masakari-engine/inventory.yaml', 'r') as yml_file:
     masakari_inventory = yaml.safe_load(yml_file)
@@ -37,12 +43,7 @@ def probe():
         port = target.split(':')[1]
         user = ipmi_info[ip]['pm_user']
         password = ipmi_info[ip]['pm_password']
-        args = {
-            "host": ip,
-            "port": port,
-            "username": user,
-            "password": password
-        }
+        args = Args(host=ip, port=port, username=user, password=password)
         for mod in module.split(','):
             if mod == 'inventory':
                 inventory_number_gauge._metric_init()
