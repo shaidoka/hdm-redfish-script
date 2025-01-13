@@ -35,18 +35,25 @@ def probe():
     try:
         ip = target.split(':')[0]
         port = target.split(':')[1]
-        client = RedfishClient({'host': ip, 'port': port, 'user': ipmi_info[ip]['pm_user'], 'password': ipmi_info[ip]['pm_password']})
+        user = ipmi_info[ip]['pm_user']
+        password = ipmi_info[ip]['pm_password']
+        args = {
+            "ip": ip,
+            "port": port,
+            "user": user,
+            "password": password
+        }
         for mod in module.split(','):
             if mod == 'inventory':
                 inventory_number_gauge._metric_init()
                 inventory = model.get_inventory.GetInventory()
-                inventory.run(client)
+                inventory.run(args)
                 for key, value in inventory.dict.items():
                     inventory_number_gauge.labels(target=target, type=key).set(value)
             elif mod == 'temperature':
                 temperature_gauge._metric_init()
                 temperature = model.get_temperature.GetTemperature()
-                temperature.run(client)
+                temperature.run(args)
                 temperature_gauge.labels(target=target).set(temperature.temperature)
             else:
                 return Response(f"Bad request: Invalid module '{mod}'", status=400)
