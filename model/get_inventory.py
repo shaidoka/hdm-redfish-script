@@ -28,7 +28,6 @@ class GetInventory(BaseModule):
     def __init__(self):
         super().__init__()
         self.id = None
-        self.hostname = None
         self.memoryCount = None
         self.networkInterfaceCount = None
         self.gpuCount = None
@@ -43,7 +42,6 @@ class GetInventory(BaseModule):
     def dict(self):
 
         return {
-            "HostName": self.hostname,
             "MemoryCount": self.memoryCount,
             "NetworkInterfaceCount": self.networkInterfaceCount,
             "GPUCount": self.gpuCount,
@@ -99,7 +97,6 @@ class GetInventory(BaseModule):
 
     def pack_resource(self, resp):
 
-        self.hostname = resp.get("HostName", None)
         self.memoryCount = resp.get("MemorySummary", None)["Count"]
         self.cpuCount = resp["ProcessorSummary"]["Count"]
         self.lDiskCount = resp["StorageControllerSummary"]["LogicalDriveCount"]
