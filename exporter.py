@@ -8,10 +8,12 @@ import model.get_power
 import model.get_inventory
 import model.get_temperature
 
+registry = CollectorRegistry()
+
 # Metrics description
-probe_status = Enum('probe_status', 'Probe status', ['target'], states=['up', 'down'])
-temperature_gauge = Gauge('temperature_celsius', 'Temperature in Celsius', ['target'])
-inventory_number_gauge = Gauge('inventory_number', 'Number of inventory items', ['target', 'type'])
+probe_status = Enum('probe_status', 'Probe status', ['target'], states=['up', 'down'], registry=registry)
+temperature_gauge = Gauge('temperature_celsius', 'Temperature in Celsius', ['target'], registry=registry)
+inventory_number_gauge = Gauge('inventory_number', 'Number of inventory items', ['target', 'type'], registry=registry)
 
 app = Flask(__name__)
 
@@ -28,8 +30,7 @@ def probe():
     if not target or not module:
         return Response("Bad request: Missing 'target' or 'module' params", status=400)
     
-    registry = CollectorRegistry()
-    probe_status._metric_init(registry=registry)
+    probe_status._metric_init()
 
     try:
         ip = target.split('/')[0]
@@ -37,11 +38,13 @@ def probe():
         client = RedfishClient({'host': ip, 'port': port, 'user': ipmi_info[ip]['pm_user'], 'password': ipmi_info[ip]['pm_password']})
         for mod in module.split(','):
             if mod == 'inventory':
+                inventory_number_gauge._metric_init()
                 inventory = model.get_inventory.GetInventory()
                 inventory.run(client)
                 for key, value in inventory.dict.items():
                     inventory_number_gauge.labels(target=target, type=key).set(value)
             elif mod == 'temperature':
+                temperature_gauge._metric_init()
                 temperature = model.get_temperature.GetTemperature()
                 temperature.run(client)
                 temperature_gauge.labels(target=target).set(temperature.temperature)
