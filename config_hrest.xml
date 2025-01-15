@@ -307,15 +307,15 @@
 	<mapper id="getsyshealth" help="get system health state." file="model/get_health" class="GetHealth" method="run">
 		<result>
 			<li/>
-			<property name="System health" reference="health"/>
-			<property name="Temperature" reference="temperature"/>
-			<property name="Voltage" reference="voltage"/>
-			<property name="Current" reference="current"/>
+			<property name="System health" reference="overall"/>
+			<property name="Board" reference="board"/>
+			<property name="Fan" reference="fans"/>
 			<property name="Memory" reference="memory"/>
-			<property name="Fans" reference="fans"/>
+			<property name="PCIe" reference="pcie"/>
+			<property name="PSU" reference="power"/>
 			<property name="Processor" reference="processor"/>
-			<property name="Disk" reference="disk"/>
-			<property name="Power" reference="power"/>
+			<property name="Disk" reference="storage"/>
+			<property name="Temperature" reference="temperature"/>
 			<li/>
         </result>
 	</mapper>
