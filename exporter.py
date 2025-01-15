@@ -6,13 +6,16 @@ import yaml
 import model.get_power
 import model.get_inventory
 import model.get_temperature
+import model.get_health
 
 registry = CollectorRegistry()
 
 # Metrics description
 probe_status = Enum('probe_status', 'Probe status', ['target'], states=['up', 'down'], registry=registry)
 temperature_gauge = Gauge('temperature_celsius', 'Temperature in Celsius', ['target'], registry=registry)
+health_gauge = Gauge('health', 'Health status (1: Healthy, 0: Unhealthy)', ['target', 'type'], registry=registry)
 inventory_number_gauge = Gauge('inventory_number', 'Number of inventory items', ['target', 'type'], registry=registry)
+power_usage_gauge = Gauge('power_usage_watts', 'Power usage in watts', ['target', 'type'], registry=registry)
 
 app = Flask(__name__)
 
@@ -51,12 +54,29 @@ def probe():
                 inventory.run(args)
                 for key, value in inventory.dict.items():
                     inventory_number_gauge.labels(target=target, type=key).set(value)
+                probe_status.labels(target=target).state('up')
             elif mod == 'temperature':
                 temperature_gauge._metric_init()
                 temperature = model.get_temperature.GetTemperature()
                 temperature.run(args)
                 temperature_gauge.labels(target=target).set(temperature.temperature)
+                probe_status.labels(target=target).state('up')
+            elif mod == 'health':
+                health_gauge._metric_init()
+                health = model.get_health.GetHealth()
+                health.run(args)
+                for key, value in health.dict.items():
+                    health_gauge.labels(target=target, type=key).set(1 if value == 'OK' else 0)
+                probe_status.labels(target=target).state('up')
+            elif mod == 'power':
+                power_usage_gauge._metric_init()
+                power = model.get_power.GetPower()
+                power.run(args)
+                for key, value in power.dict.items():
+                    power_usage_gauge.labels(target=target, type=key).set(value)
+                probe_status.labels(target=target).state('up')
             else:
+                probe_status.labels(target=target).state('down')
                 return Response(f"Bad request: Invalid module '{mod}'", status=400)
     except FailException as e:
         probe_status.labels(target=target).state('down')
