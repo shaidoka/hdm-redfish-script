@@ -12,7 +12,7 @@ registry = CollectorRegistry()
 
 # Metrics description
 probe_status = Enum('probe_status', 'Probe status', ['target'], states=['up', 'down'], registry=registry)
-temperature_gauge = Gauge('temperature_celsius', 'Temperature in Celsius', ['target'], registry=registry)
+temperature_gauge = Gauge('temperature_celsius', 'Temperature in Celsius', ['target', 'type'], registry=registry)
 health_gauge = Gauge('health', 'Health status (1: Healthy, 0: Unhealthy)', ['target', 'type'], registry=registry)
 inventory_number_gauge = Gauge('inventory_number', 'Number of inventory items', ['target', 'type'], registry=registry)
 power_usage_gauge = Gauge('power_usage_watts', 'Power usage in watts', ['target', 'type'], registry=registry)
@@ -59,7 +59,8 @@ def probe():
                 temperature_gauge._metric_init()
                 temperature = model.get_temperature.GetTemperature()
                 temperature.run(args)
-                temperature_gauge.labels(target=target).set(temperature.temperature)
+                for temp in temperature.temperatures:
+                    temperature_gauge.labels(target=target, type=temp.name).set(temp.reading_celsius)
                 probe_status.labels(target=target).state('up')
             elif mod == 'health':
                 health_gauge._metric_init()
