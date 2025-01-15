@@ -46,7 +46,7 @@ class GetHealth(BaseModule):
 
         client = RedfishClient(args)
         systems_id = client.get_systems_id()
-        url = "/redfish/v1/System/%s" % systems_id
+        url = "/redfish/v1/Systems/%s" % systems_id
         resp = client.send_request("get", url)
         if (isinstance(resp, dict) and
                 Constant.SUCCESS_200 == resp.get("status_code", None)):
