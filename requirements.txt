@@ -1,3 +1,5 @@
 prometheus_client
 flask
 pyyaml
+urllib3
+requests
